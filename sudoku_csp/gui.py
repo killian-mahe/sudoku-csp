@@ -19,6 +19,9 @@ from PySide6.QtWidgets import (
 import numpy as np
 
 
+from generator import Generator
+
+
 class DigitText(QGraphicsSimpleTextItem):
     def __init__(self, parent: QGraphicsItem = None):
         super().__init__(parent)
@@ -54,8 +57,9 @@ class MainWindow(QMainWindow):
         self.sudoku_view = QGraphicsView(self.sudoku_scene)
 
         self.size = 9
-        self.box_map = np.empty((self.size, self.size, 2), dtype=object)
-        self.digits_map = np.zeros((self.size, self.size))
+        self.cell_width = 500 / self.size
+        self.box_map: np.array = np.empty((self.size, self.size, 2), dtype=object)
+        self.digits_map: np.array = np.zeros((self.size, self.size))
 
         self.setCentralWidget(QtWidgets.QWidget())
         self.centralWidget().setLayout(self.layout)
@@ -63,16 +67,14 @@ class MainWindow(QMainWindow):
         self.create_menus()
         self.create_sudoku_view(self.size)
 
-    def create_sudoku_view(self, n: int = 9, width: int = 500):
+    def create_sudoku_view(self, n: int = 9):
         self.layout.addWidget(self.sudoku_view)
-
-        box_width = width / n
 
         for y in range(0, n):
             for x in range(0, n):
                 self.box_map[x, y] = [
                     self.sudoku_scene.addRect(
-                        QRectF(box_width * x, box_width * y, box_width, box_width)
+                        QRectF(self.cell_width * x, self.cell_width * y, self.cell_width, self.cell_width)
                     ),
                     None
                 ]
@@ -83,6 +85,7 @@ class MainWindow(QMainWindow):
         import_action = QAction("Import", self)
         import_action.setShortcut("Ctrl+I")
         import_action.triggered.connect(self.handle_import)
+        import_action.setEnabled(False)
         self.menuBar().addAction(import_action)
 
         generate_action = QAction("Generate", self)
@@ -92,16 +95,34 @@ class MainWindow(QMainWindow):
 
         self.setStatusBar(QStatusBar())
 
-    def draw_number(self, number: int, pos: tuple, size: int = 30):
+    def draw_number(self, number: int, pos: np.array, size: int = 30):
         text = DigitText()
+        self.box_map[pos[0], pos[1], 1] = text
+
         text.setFont(QFont("Arial", size, QFont.Bold))
         text.setText(str(number))
+
+        pos = pos * self.cell_width + self.cell_width / 2
         text.setPos(QPointF(pos[0], pos[1]))
         self.sudoku_scene.addItem(text)
         return text
+
+    def clear_cell(self, pos: np.array):
+        self.sudoku_scene.removeItem(self.box_map[pos[0], pos[1], 1])
+        self.box_map[pos[0], pos[1], 1] = None
+
 
     def handle_import(self):
         print("Importing a new sudoku")
 
     def handle_generation(self):
         print("Generating a new sudoku")
+        self.digits_map = Generator.generate()
+
+        for y in range(self.size):
+            for x in range(self.size):
+
+                self.clear_cell([x, y])
+
+                if self.digits_map[x, y] != 0:
+                    self.draw_number(self.digits_map[x, y], np.array([x, y]))
