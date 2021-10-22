@@ -74,9 +74,14 @@ class MainWindow(QMainWindow):
             for x in range(0, n):
                 self.box_map[x, y] = [
                     self.sudoku_scene.addRect(
-                        QRectF(self.cell_width * x, self.cell_width * y, self.cell_width, self.cell_width)
+                        QRectF(
+                            self.cell_width * x,
+                            self.cell_width * y,
+                            self.cell_width,
+                            self.cell_width,
+                        )
                     ),
-                    None
+                    None,
                 ]
 
         # Draw visual lines
@@ -84,8 +89,20 @@ class MainWindow(QMainWindow):
             pen = QPen()
             pen.setWidth(3)
             for i in range(1, 3):
-                self.sudoku_scene.addLine(i * 3 * self.cell_width, 0, i * 3 * self.cell_width, n * self.cell_width, pen)
-                self.sudoku_scene.addLine(0, i * 3 * self.cell_width, n * self.cell_width,  i * 3 * self.cell_width, pen)
+                self.sudoku_scene.addLine(
+                    i * 3 * self.cell_width,
+                    0,
+                    i * 3 * self.cell_width,
+                    n * self.cell_width,
+                    pen,
+                )
+                self.sudoku_scene.addLine(
+                    0,
+                    i * 3 * self.cell_width,
+                    n * self.cell_width,
+                    i * 3 * self.cell_width,
+                    pen,
+                )
 
     def create_menus(self):
         self.setMenuBar(QMenuBar())
