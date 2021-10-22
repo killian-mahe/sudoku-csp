@@ -15,11 +15,12 @@ from PySide6.QtWidgets import (
     QGraphicsItem,
     QStyleOptionGraphicsItem,
     QWidget,
+    QMenu,
 )
 import numpy as np
 
-
-from generator import Generator
+from generator import Generator, SudokuDifficulty
+from interfaces import AlgorithmType
 
 
 class DigitText(QGraphicsSimpleTextItem):
@@ -55,6 +56,9 @@ class MainWindow(QMainWindow):
         self.layout = QGridLayout()
         self.sudoku_scene = QGraphicsScene()
         self.sudoku_view = QGraphicsView(self.sudoku_scene)
+
+        self.generate_menu = QMenu("Generate", self)
+        self.solve_menu = QMenu("Solve", self)
 
         self.size = 9
         self.cell_width = 500 / self.size
@@ -113,10 +117,80 @@ class MainWindow(QMainWindow):
         import_action.setEnabled(False)
         self.menuBar().addAction(import_action)
 
-        generate_action = QAction("Generate", self)
-        generate_action.setShortcut("Ctrl+N")
-        generate_action.triggered.connect(self.handle_generation)
-        self.menuBar().addAction(generate_action)
+        generate_easy_action = QAction("Easy", self)
+        generate_easy_action.setShortcut("Ctrl+E")
+        generate_easy_action.setCheckable(False)
+        generate_easy_action.triggered.connect(
+            lambda x: self.handle_generation(SudokuDifficulty.EASY)
+        )
+
+        generate_medium_action = QAction("Medium", self)
+        generate_medium_action.setShortcut("Ctrl+M")
+        generate_medium_action.setCheckable(False)
+        generate_medium_action.triggered.connect(
+            lambda x: self.handle_generation(SudokuDifficulty.MEDIUM)
+        )
+
+        generate_hard_action = QAction("Hard", self)
+        generate_hard_action.setShortcut("Ctrl+H")
+        generate_hard_action.setCheckable(False)
+        generate_hard_action.triggered.connect(
+            lambda x: self.handle_generation(SudokuDifficulty.HARD)
+        )
+
+        generate_random_action = QAction("Random", self)
+        generate_random_action.setShortcut("Ctrl+R")
+        generate_random_action.setCheckable(False)
+        generate_random_action.triggered.connect(
+            lambda x: self.handle_generation(SudokuDifficulty.RANDOM)
+        )
+
+        self.generate_menu.addActions(
+            [
+                generate_easy_action,
+                generate_medium_action,
+                generate_hard_action,
+                generate_random_action,
+            ]
+        )
+        self.menuBar().addMenu(self.generate_menu)
+
+        solve_backtracking_action = QAction("Backtracking", self)
+        solve_backtracking_action.triggered.connect(
+            lambda x: self.handle_resolve(AlgorithmType.BACKTRACKING)
+        )
+
+        solve_mrv_action = QAction("MRV", self)
+        solve_mrv_action.triggered.connect(
+            lambda x: self.handle_resolve(AlgorithmType.MRV)
+        )
+
+        solve_ac3_action = QAction("AC-3", self)
+        solve_ac3_action.triggered.connect(
+            lambda x: self.handle_resolve(AlgorithmType.AC3)
+        )
+
+        solve_degree_h_action = QAction("Degree heuristic", self)
+        solve_degree_h_action.triggered.connect(
+            lambda x: self.handle_resolve(AlgorithmType.DEGREE_H)
+        )
+
+        solve_least_constraining_h_action = QAction("Least constraining value", self)
+        solve_least_constraining_h_action.triggered.connect(
+            lambda x: self.handle_resolve(AlgorithmType.LEAST_CONSTRAINING_H)
+        )
+
+        self.solve_menu.addActions(
+            [
+                solve_backtracking_action,
+                solve_mrv_action,
+                solve_ac3_action,
+                solve_degree_h_action,
+                solve_least_constraining_h_action
+            ]
+        )
+        self.solve_menu.setEnabled(False)
+        self.menuBar().addMenu(self.solve_menu)
 
         self.setStatusBar(QStatusBar())
 
@@ -139,8 +213,8 @@ class MainWindow(QMainWindow):
     def handle_import(self):
         pass
 
-    def handle_generation(self):
-        self.digits_map = Generator.generate(self.size)
+    def handle_generation(self, difficulty: SudokuDifficulty = SudokuDifficulty.EASY):
+        self.digits_map = Generator.generate(self.size, difficulty)
 
         for y in range(self.size):
             for x in range(self.size):
@@ -149,3 +223,9 @@ class MainWindow(QMainWindow):
 
                 if self.digits_map[x, y] != 0:
                     self.draw_number(self.digits_map[x, y], np.array([x, y]))
+
+        self.solve_menu.setEnabled(True)
+
+    def handle_resolve(self, algorithm_type: AlgorithmType):
+        print(f"Trying to resolve using {algorithm_type.value} algorithm")
+        self.solve_menu.setEnabled(False)
