@@ -3,7 +3,7 @@ Application related GUI.
 """
 from PySide6 import QtWidgets
 from PySide6.QtCore import QRectF, QPointF
-from PySide6.QtGui import QIcon, QAction, QFont, QPainter
+from PySide6.QtGui import QIcon, QAction, QFont, QPainter, QPen
 from PySide6.QtWidgets import (
     QMainWindow,
     QMenuBar,
@@ -79,6 +79,14 @@ class MainWindow(QMainWindow):
                     None
                 ]
 
+        # Draw visual lines
+        if n == 9:
+            pen = QPen()
+            pen.setWidth(3)
+            for i in range(1, 3):
+                self.sudoku_scene.addLine(i * 3 * self.cell_width, 0, i * 3 * self.cell_width, n * self.cell_width, pen)
+                self.sudoku_scene.addLine(0, i * 3 * self.cell_width, n * self.cell_width,  i * 3 * self.cell_width, pen)
+
     def create_menus(self):
         self.setMenuBar(QMenuBar())
 
@@ -111,13 +119,11 @@ class MainWindow(QMainWindow):
         self.sudoku_scene.removeItem(self.box_map[pos[0], pos[1], 1])
         self.box_map[pos[0], pos[1], 1] = None
 
-
     def handle_import(self):
-        print("Importing a new sudoku")
+        pass
 
     def handle_generation(self):
-        print("Generating a new sudoku")
-        self.digits_map = Generator.generate()
+        self.digits_map = Generator.generate(self.size)
 
         for y in range(self.size):
             for x in range(self.size):
