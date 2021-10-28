@@ -6,7 +6,7 @@ This module manage the graphical user interface of the application.
 """
 
 from PySide6 import QtWidgets
-from PySide6.QtCore import QRectF, QPointF
+from PySide6.QtCore import QRectF, QPointF, Signal, QThread
 from PySide6.QtGui import QIcon, QAction, QFont, QPainter, QPen
 from PySide6.QtWidgets import (
     QMainWindow,
@@ -19,12 +19,12 @@ from PySide6.QtWidgets import (
     QGraphicsItem,
     QStyleOptionGraphicsItem,
     QWidget,
-    QMenu,
+    QMenu, QMessageBox,
 )
 import numpy as np
 
 from generator import Generator, SudokuDifficulty
-from interfaces import AlgorithmType
+from interfaces import AlgorithmType, Resolver
 
 
 class DigitText(QGraphicsSimpleTextItem):
@@ -49,7 +49,9 @@ class MainWindow(QMainWindow):
     A class to represent the app main window.
     """
 
-    def __init__(self, title: str):
+    resolve = Signal((AlgorithmType, np.ndarray))
+
+    def __init__(self, title: str, resolver: Resolver):
         """
         Constructs all the necessary attributes for the main window object.
         """
@@ -70,11 +72,19 @@ class MainWindow(QMainWindow):
         self.box_map: np.array = np.empty((self.length, self.length, 2), dtype=object)
         self.digits_map: np.array = np.zeros((self.length, self.length))
 
+        self.resolver_thread = QThread()
+        self.resolve.connect(resolver.do_work)
+        resolver.result_ready.connect(self.handle_result)
+        resolver.error.connect(self.handle_error)
+        resolver.moveToThread(self.resolver_thread)
+
         self.setCentralWidget(QtWidgets.QWidget())
         self.centralWidget().setLayout(self.layout)
 
         self.create_menus()
         self.create_sudoku_view(self.size)
+
+        self.resolver_thread.start()
 
     def create_sudoku_view(self, n: int = 3):
         self.layout.addWidget(self.sudoku_view)
@@ -214,22 +224,32 @@ class MainWindow(QMainWindow):
         self.sudoku_scene.removeItem(self.box_map[pos[0], pos[1], 1])
         self.box_map[pos[0], pos[1], 1] = None
 
-    def handle_import(self):
-        pass
-
-    def handle_generation(self, difficulty: SudokuDifficulty = SudokuDifficulty.EASY):
-        self.digits_map = Generator.generate(self.size, difficulty)
-
-        for y in range(self.size):
-            for x in range(self.size):
+    def update_sudoku_view(self):
+        for y in range(self.length):
+            for x in range(self.length):
 
                 self.clear_cell([x, y])
 
                 if self.digits_map[x, y] != 0:
                     self.draw_number(self.digits_map[x, y], np.array([x, y]))
 
+    def handle_error(self, error_message: str):
+        QMessageBox.critical(self, "Error", "An error as occured while solving the puzzle.")
+
+    def handle_import(self):
+        pass
+
+    def handle_generation(self, difficulty: SudokuDifficulty = SudokuDifficulty.EASY):
+        self.digits_map = Generator.generate(self.size, difficulty)
+        self.update_sudoku_view()
         self.solve_menu.setEnabled(True)
 
     def handle_resolve(self, algorithm_type: AlgorithmType):
-        print(f"Trying to resolve using {algorithm_type.value} algorithm")
+        print(f"Trying to resolve using {algorithm_type.value} algorithm...")
         self.solve_menu.setEnabled(False)
+        self.resolve.emit(algorithm_type, self.digits_map)
+
+    def handle_result(self, algorithm_type: AlgorithmType, sudoku_map: np.array):
+        print(f"Sudoku resolved using {algorithm_type.value} algorithm!")
+        self.digits_map = sudoku_map
+        self.update_sudoku_view()
