@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
     QGraphicsItem,
     QStyleOptionGraphicsItem,
     QWidget,
-    QMenu,
+    QMenu, QMessageBox,
 )
 import numpy as np
 
@@ -75,6 +75,7 @@ class MainWindow(QMainWindow):
         self.resolver_thread = QThread()
         self.resolve.connect(resolver.do_work)
         resolver.result_ready.connect(self.handle_result)
+        resolver.error.connect(self.handle_error)
         resolver.moveToThread(self.resolver_thread)
 
         self.setCentralWidget(QtWidgets.QWidget())
@@ -231,6 +232,9 @@ class MainWindow(QMainWindow):
 
                 if self.digits_map[x, y] != 0:
                     self.draw_number(self.digits_map[x, y], np.array([x, y]))
+
+    def handle_error(self, error_message: str):
+        QMessageBox.critical(self, "Error", "An error as occured while solving the puzzle.")
 
     def handle_import(self):
         pass

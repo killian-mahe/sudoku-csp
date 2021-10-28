@@ -1,14 +1,16 @@
 """
 Main application program.
 """
+import traceback
 import sys
 
-from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import Signal
 import numpy as np
 
-from sudoku_csp.gui import MainWindow
 from sudoku_csp.interfaces import AlgorithmType, Resolver
+from sudoku_csp.gui import MainWindow
+from sudoku_csp.csp import SudokuCSP
 
 
 class SudokuResolver(Resolver):
@@ -17,6 +19,7 @@ class SudokuResolver(Resolver):
     """
 
     result_ready = Signal((AlgorithmType, np.ndarray))
+    error = Signal(str)
 
     def do_work(
         self,
@@ -37,6 +40,22 @@ class SudokuResolver(Resolver):
         -------
         None
         """
+        try:
+            csp = SudokuCSP(sudoku_map)
+
+            if algorithm_type == AlgorithmType.BACKTRACKING:
+                pass
+            elif algorithm_type == AlgorithmType.MRV:
+                pass
+            elif algorithm_type == AlgorithmType.DEGREE_H:
+                pass
+            elif algorithm_type == AlgorithmType.LEAST_CONSTRAINING_H:
+                pass
+            elif algorithm_type == AlgorithmType.AC3:
+                pass
+        except Exception:
+            print(traceback.format_exc())
+            self.error.emit(traceback.format_exc())
         self.result_ready.emit(algorithm_type, sudoku_map)
 
 
