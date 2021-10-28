@@ -1,5 +1,6 @@
-"""
-Generate new sudoku puzzles.
+# -*- coding: utf-8 -*-
+"""Generate sudoku puzzles.
+
 """
 import requests
 from enum import Enum
@@ -20,11 +21,11 @@ class Generator:
 
     @classmethod
     def generate(
-        cls, size: int = 9, difficulty: SudokuDifficulty = SudokuDifficulty.MEDIUM
+        cls, size: int = 3, difficulty: SudokuDifficulty = SudokuDifficulty.MEDIUM
     ):
-        if size != 9:
+        if size != 3:
             raise NotImplementedError(
-                "Sudoku of size different than 9 are not currently supported."
+                "Sudoku of size different than 3x3 are not currently supported."
             )
 
         params = {"difficulty": difficulty.value}
