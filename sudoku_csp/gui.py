@@ -1,6 +1,10 @@
+# -*- coding: utf-8 -*-
+"""Application graphical user interface.
+
+This module manage the graphical user interface of the application.
+
 """
-Application related GUI.
-"""
+
 from PySide6 import QtWidgets
 from PySide6.QtCore import QRectF, QPointF
 from PySide6.QtGui import QIcon, QAction, QFont, QPainter, QPen
@@ -60,10 +64,11 @@ class MainWindow(QMainWindow):
         self.generate_menu = QMenu("Generate", self)
         self.solve_menu = QMenu("Solve", self)
 
-        self.size = 9
-        self.cell_width = 500 / self.size
-        self.box_map: np.array = np.empty((self.size, self.size, 2), dtype=object)
-        self.digits_map: np.array = np.zeros((self.size, self.size))
+        self.size = 3
+        self.length = self.size ** 2
+        self.cell_width = 500 / self.length
+        self.box_map: np.array = np.empty((self.length, self.length, 2), dtype=object)
+        self.digits_map: np.array = np.zeros((self.length, self.length))
 
         self.setCentralWidget(QtWidgets.QWidget())
         self.centralWidget().setLayout(self.layout)
@@ -71,11 +76,11 @@ class MainWindow(QMainWindow):
         self.create_menus()
         self.create_sudoku_view(self.size)
 
-    def create_sudoku_view(self, n: int = 9):
+    def create_sudoku_view(self, n: int = 3):
         self.layout.addWidget(self.sudoku_view)
 
-        for y in range(0, n):
-            for x in range(0, n):
+        for y in range(0, n ** 2):
+            for x in range(0, n ** 2):
                 self.box_map[x, y] = [
                     self.sudoku_scene.addRect(
                         QRectF(
@@ -89,24 +94,23 @@ class MainWindow(QMainWindow):
                 ]
 
         # Draw visual lines
-        if n == 9:
-            pen = QPen()
-            pen.setWidth(3)
-            for i in range(1, 3):
-                self.sudoku_scene.addLine(
-                    i * 3 * self.cell_width,
-                    0,
-                    i * 3 * self.cell_width,
-                    n * self.cell_width,
-                    pen,
-                )
-                self.sudoku_scene.addLine(
-                    0,
-                    i * 3 * self.cell_width,
-                    n * self.cell_width,
-                    i * 3 * self.cell_width,
-                    pen,
-                )
+        pen = QPen()
+        pen.setWidth(3)
+        for i in range(1, n):
+            self.sudoku_scene.addLine(
+                i * n * self.cell_width,
+                0,
+                i * n * self.cell_width,
+                n ** 2 * self.cell_width,
+                pen,
+            )
+            self.sudoku_scene.addLine(
+                0,
+                i * n * self.cell_width,
+                n ** 2 * self.cell_width,
+                i * n * self.cell_width,
+                pen,
+            )
 
     def create_menus(self):
         self.setMenuBar(QMenuBar())
@@ -186,7 +190,7 @@ class MainWindow(QMainWindow):
                 solve_mrv_action,
                 solve_ac3_action,
                 solve_degree_h_action,
-                solve_least_constraining_h_action
+                solve_least_constraining_h_action,
             ]
         )
         self.solve_menu.setEnabled(False)

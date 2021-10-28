@@ -1,65 +1,88 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Oct 21 14:17:08 2021
+"""CSP representation.
 
-@author: Nomanina
-variables : each case of the sudoku grid
-domain : [1,9]
-domain
 """
 
+from interfaces import Constraint
 
 
-class Constraint:
-    def __init__(self, variables):
-        self.variables = variables
-    def satisfied(self, assignement):
-        pass
-    
-        
 class CSP:
-    def __init__(self, variables, domains):
+    """
+    A basic implementation of a CSP.
+    """
+
+    def __init__(self, variables: list, domains: dict, constraints: list):
+        """
+        Create a CSP instance.
+
+        Parameters
+        ----------
+        variables : list
+            The list of variables.
+        domains : dict
+            A dictionary containing the domain of each variable.
+        constraints : list
+            A list of constraint.
+        """
         self.domains = domains
         self.variables = variables
-        self.constraints = {}
-        for var in variables:
-            if(var in self.domains):
-                self.constraints[var] = []
-        
-        
-    def add_constraints(self,constraint):
-        for var in constraint.variables:
+        self.constraints = constraints
+
+        self.var_to_const = {var: set() for var in self.variables}
+
+        for con in constraints:
+            for var in con.scope:
+                self.var_to_const[var].add(con)
+
+    def add_constraints(self, constraint: Constraint):
+        """
+        Add a new constraint.
+
+        Parameters
+        ----------
+        constraint : Constraint
+            The list of constraints to add.
+
+        Returns
+        -------
+        None
+        """
+        for var in constraint.scope:
             if var in self.variables:
-                self.constraints[var].append(constraint)
-    
-    def consistent(self, assignement,variable):
-        for constraint in assignement[variable]:
-            if(not constraint.satisfied(assignement)):
-                return False
-        return True           
-        
-    def recursive_backtracking(self,assignement):
-        if len(assignement) == len(self.variables):
-            return assignement     
-        unassigned_var = 0
-        for var in self.variables:
-            if var not in assignement:
-                unassigned_var = var     
-        for value in self.domains:
-            test_assignement = assignement.copy()
-            test_assignement[unassigned_var] = value          
-            if(self.consistent(test_assignement,unassigned_var)):
-                assignement[unassigned_var] = value
-            result = self.recursive_backtracking(assignement)
-            if(result != None):
-                return result
-        return None
-    
-    
-    
-                
-            
-            
-    
-    
-        
+                self.var_to_const[var].add(constraint)
+
+    def consistent(self, assignment: dict):
+        """
+        Check if the passed assignment is consistent regarding the CSP.
+
+        Parameters
+        ----------
+        assignment : dict
+            A dictionary {var: domain} representing the assignments of a CSP.
+
+        Returns
+        -------
+        bool
+        """
+        return all(
+            con.satisfied(assignment)
+            for con in self.constraints
+            if all(v in assignment for v in con.scope)
+        )
+
+    # def recursive_backtracking(self, assignment):
+    #     if len(assignment) == len(self.variables):
+    #         return assignment
+    #     unassigned_var = 0
+    #     for var in self.variables:
+    #         if var not in assignment:
+    #             unassigned_var = var
+    #     for value in self.domains:
+    #         test_assignment = assignment.copy()
+    #         test_assignment[unassigned_var] = value
+    #         if self.consistent(test_assignment, unassigned_var):
+    #             assignment[unassigned_var] = value
+    #         result = self.recursive_backtracking(assignment)
+    #         if result is not None:
+    #             return result
+    #     return None
