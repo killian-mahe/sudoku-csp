@@ -4,6 +4,7 @@
 """
 import math
 
+import numpy
 import numpy as np
 
 from interfaces import Constraint
@@ -14,13 +15,13 @@ class CSP:
     A basic implementation of a CSP.
     """
 
-    def __init__(self, variables: set, domains: dict, constraints: list):
+    def __init__(self, variables: list, domains: dict, constraints: list):
         """
         Create a CSP instance.
 
         Parameters
         ----------
-        variables : set
+        variables : list
             The list of variables.
         domains : dict
             A dictionary containing the domain of each variable.
@@ -89,7 +90,7 @@ class SudokuCSP(CSP):
         for x in range(len(sudoku_map)):
             for y in range(len(sudoku_map)):
                 variables.add(f"{x}, {y}")
-                domain = set(range(1, 10)) if not sudoku_map[x, y] else {sudoku_map[x, y]}
+                domain = set(range(1, len(sudoku_map))) if not sudoku_map[x, y] else {sudoku_map[x, y]}
                 domains[f"{x}, {y}"] = domain
 
                 for x_row in range(len(sudoku_map)):
@@ -103,7 +104,8 @@ class SudokuCSP(CSP):
                         constraints.append(constraint)
 
                 for i in range(size):
-                    constraint = Constraint(frozenset({f"{x}, {y}", f"{x % size + i}, {y % size + i}"}), constraint_evalution)
+                    constraint = Constraint(frozenset({f"{x}, {y}", f"{x % size + i}, {y % size + i}"}),
+                                            constraint_evalution)
                     if constraint not in constraints:
                         constraints.append(constraint)
 
