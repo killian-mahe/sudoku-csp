@@ -1,4 +1,3 @@
-[![Docker Image CI](https://github.com/killian-mahe/colors-clustering/actions/workflows/docker-image.yml/badge.svg?branch=main)](https://github.com/killian-mahe/colors-clustering/actions/workflows/docker-image.yml)
 <!-- PROJECT LOG -->
 <br />
 <p align="center">
@@ -8,12 +7,12 @@
   <p align="center">
     A Python sudoku solver built with Qt.
     <br />
-    <a href="https://github.com/killian-mahe/colors-clustering"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/killian-mahe/sudoku-csp"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/killian-mahe/colors-clustering/issues">Report Bug</a>
+    <a href="https://github.com/killian-mahe/sudoku-csp/issues">Report Bug</a>
     ·
-    <a href="https://github.com/killian-mahe/colors-clustering/issues">Request Feature</a>
+    <a href="https://github.com/killian-mahe/sudoku-csp/issues">Request Feature</a>
   </p>
 </p>
 
@@ -95,7 +94,7 @@ Before clonning the repository, you should create a new virtual environment (usi
 <!-- ROADMAP -->
 ## Roadmap
 
-See the [open issues](https://github.com/killian-mahe/agent-aspirateur/issues) for a list of proposed features (and known issues).
+See the [open issues](https://github.com/killian-mahe/sudoku-csp/issues) for a list of proposed features (and known issues).
 
 
 <!-- CONTRIBUTING -->
@@ -123,7 +122,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 Killian Mahé - [@killian-mahe](https://www.linkedin.com/in/killian-mah%C3%A9-246928135/) - killianmahe.pro@gmail.com
 
-Project Link: [https://github.com/killian-mahe/agent-aspirateur](https://github.com/killian-mahe/agent-aspirateur)
+Project Link: [https://github.com/killian-mahe/sudoku-csp](https://github.com/killian-mahe/sudoku-csp)
 
 
 
