@@ -8,6 +8,8 @@ class of the application.
 
 from enum import Enum
 
+from PySide6.QtCore import Signal, QObject
+
 
 class AlgorithmType(Enum):
     BACKTRACKING = "Backtracking"
@@ -15,6 +17,17 @@ class AlgorithmType(Enum):
     AC3 = "AC-3"
     DEGREE_H = "Degree heuristic"
     LEAST_CONSTRAINING_H = "Least constraining value"
+
+
+class Resolver(QObject):
+    """
+    A worker who manage the resolving of a problem.
+    """
+
+    result_ready = Signal()
+
+    def do_work(self):
+        self.result_ready.emit()
 
 
 class Constraint:

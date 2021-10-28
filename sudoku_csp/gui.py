@@ -6,7 +6,7 @@ This module manage the graphical user interface of the application.
 """
 
 from PySide6 import QtWidgets
-from PySide6.QtCore import QRectF, QPointF, QObject, Signal, QThread, Slot
+from PySide6.QtCore import QRectF, QPointF, Signal, QThread
 from PySide6.QtGui import QIcon, QAction, QFont, QPainter, QPen
 from PySide6.QtWidgets import (
     QMainWindow,
@@ -24,7 +24,7 @@ from PySide6.QtWidgets import (
 import numpy as np
 
 from generator import Generator, SudokuDifficulty
-from interfaces import AlgorithmType
+from interfaces import AlgorithmType, Resolver
 
 
 class DigitText(QGraphicsSimpleTextItem):
@@ -44,30 +44,6 @@ class DigitText(QGraphicsSimpleTextItem):
         QGraphicsSimpleTextItem.paint(self, painter, option, widget)
 
 
-class Resolver(QObject):
-    """
-    A worker who manage the resolving of the sudoku.
-    """
-    result_ready = Signal((AlgorithmType, np.ndarray))
-
-    def do_work(self, algorithm_type: AlgorithmType, sudoku_map: np.array):
-        """
-        Do the asked work using the choosen algorithm.
-
-        Parameters
-        ----------
-        algorithm_type : AlgorithmType
-            A type of algorithm to user to resolve the sudoku.
-        sudoku_map : np.array
-            A array containing the map of the sudoku.
-
-        Returns
-        -------
-        None
-        """
-        self.result_ready.emit(algorithm_type, sudoku_map)
-
-
 class MainWindow(QMainWindow):
     """
     A class to represent the app main window.
@@ -75,7 +51,7 @@ class MainWindow(QMainWindow):
 
     resolve = Signal((AlgorithmType, np.ndarray))
 
-    def __init__(self, title: str):
+    def __init__(self, title: str, resolver: Resolver):
         """
         Constructs all the necessary attributes for the main window object.
         """
@@ -97,10 +73,9 @@ class MainWindow(QMainWindow):
         self.digits_map: np.array = np.zeros((self.length, self.length))
 
         self.resolver_thread = QThread()
-        self.resolver = Resolver()
-        self.resolve.connect(self.resolver.do_work)
-        self.resolver.result_ready.connect(self.handle_result)
-        self.resolver.moveToThread(self.resolver_thread)
+        self.resolve.connect(resolver.do_work)
+        resolver.result_ready.connect(self.handle_result)
+        resolver.moveToThread(self.resolver_thread)
 
         self.setCentralWidget(QtWidgets.QWidget())
         self.centralWidget().setLayout(self.layout)
