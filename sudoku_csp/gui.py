@@ -6,7 +6,7 @@ This module manage the graphical user interface of the application.
 """
 
 from PySide6 import QtWidgets
-from PySide6.QtCore import QRectF, QPointF
+from PySide6.QtCore import QRectF, QPointF, QObject, Signal, QThread, Slot
 from PySide6.QtGui import QIcon, QAction, QFont, QPainter, QPen
 from PySide6.QtWidgets import (
     QMainWindow,
@@ -44,10 +44,36 @@ class DigitText(QGraphicsSimpleTextItem):
         QGraphicsSimpleTextItem.paint(self, painter, option, widget)
 
 
+class Resolver(QObject):
+    """
+    A worker who manage the resolving of the sudoku.
+    """
+    result_ready = Signal((AlgorithmType, np.ndarray))
+
+    def do_work(self, algorithm_type: AlgorithmType, sudoku_map: np.array):
+        """
+        Do the asked work using the choosen algorithm.
+
+        Parameters
+        ----------
+        algorithm_type : AlgorithmType
+            A type of algorithm to user to resolve the sudoku.
+        sudoku_map : np.array
+            A array containing the map of the sudoku.
+
+        Returns
+        -------
+        None
+        """
+        self.result_ready.emit(algorithm_type, sudoku_map)
+
+
 class MainWindow(QMainWindow):
     """
     A class to represent the app main window.
     """
+
+    resolve = Signal((AlgorithmType, np.ndarray))
 
     def __init__(self, title: str):
         """
@@ -70,11 +96,19 @@ class MainWindow(QMainWindow):
         self.box_map: np.array = np.empty((self.length, self.length, 2), dtype=object)
         self.digits_map: np.array = np.zeros((self.length, self.length))
 
+        self.resolver_thread = QThread()
+        self.resolver = Resolver()
+        self.resolve.connect(self.resolver.do_work)
+        self.resolver.result_ready.connect(self.handle_result)
+        self.resolver.moveToThread(self.resolver_thread)
+
         self.setCentralWidget(QtWidgets.QWidget())
         self.centralWidget().setLayout(self.layout)
 
         self.create_menus()
         self.create_sudoku_view(self.size)
+
+        self.resolver_thread.start()
 
     def create_sudoku_view(self, n: int = 3):
         self.layout.addWidget(self.sudoku_view)
@@ -214,22 +248,29 @@ class MainWindow(QMainWindow):
         self.sudoku_scene.removeItem(self.box_map[pos[0], pos[1], 1])
         self.box_map[pos[0], pos[1], 1] = None
 
-    def handle_import(self):
-        pass
-
-    def handle_generation(self, difficulty: SudokuDifficulty = SudokuDifficulty.EASY):
-        self.digits_map = Generator.generate(self.size, difficulty)
-
-        for y in range(self.size):
-            for x in range(self.size):
+    def update_sudoku_view(self):
+        for y in range(self.length):
+            for x in range(self.length):
 
                 self.clear_cell([x, y])
 
                 if self.digits_map[x, y] != 0:
                     self.draw_number(self.digits_map[x, y], np.array([x, y]))
 
+    def handle_import(self):
+        pass
+
+    def handle_generation(self, difficulty: SudokuDifficulty = SudokuDifficulty.EASY):
+        self.digits_map = Generator.generate(self.size, difficulty)
+        self.update_sudoku_view()
         self.solve_menu.setEnabled(True)
 
     def handle_resolve(self, algorithm_type: AlgorithmType):
-        print(f"Trying to resolve using {algorithm_type.value} algorithm")
+        print(f"Trying to resolve using {algorithm_type.value} algorithm...")
         self.solve_menu.setEnabled(False)
+        self.resolve.emit(algorithm_type, self.digits_map)
+
+    def handle_result(self, algorithm_type: AlgorithmType, sudoku_map: np.array):
+        print(f"Sudoku resolved using {algorithm_type.value} algorithm!")
+        self.digits_map = sudoku_map
+        self.update_sudoku_view()
