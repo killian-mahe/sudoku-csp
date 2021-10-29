@@ -11,6 +11,7 @@ import numpy as np
 from sudoku_csp.interfaces import AlgorithmType, Resolver
 from sudoku_csp.gui import MainWindow
 from sudoku_csp.csp import SudokuCSP
+from sudoku_csp.algorithms import backtracking_search
 
 
 class SudokuResolver(Resolver):
@@ -41,10 +42,12 @@ class SudokuResolver(Resolver):
         None
         """
         try:
+            algorithm_type = AlgorithmType[algorithm_type.name]
+
             csp = SudokuCSP(sudoku_map)
 
-            if algorithm_type == AlgorithmType.BACKTRACKING:
-                pass
+            if algorithm_type is AlgorithmType.BACKTRACKING:
+                assignment = backtracking_search(csp)
             elif algorithm_type == AlgorithmType.MRV:
                 pass
             elif algorithm_type == AlgorithmType.DEGREE_H:
