@@ -11,7 +11,7 @@ import numpy as np
 from sudoku_csp.interfaces import AlgorithmType, Resolver
 from sudoku_csp.gui import MainWindow
 from sudoku_csp.csp import SudokuCSP
-from sudoku_csp.algorithms import backtracking_search, most_constrained_variable
+from sudoku_csp.algorithms import backtracking_search, most_constrained_variable, minimum_remaining_value
 
 
 class SudokuResolver(Resolver):
@@ -50,7 +50,7 @@ class SudokuResolver(Resolver):
             if algorithm_type is AlgorithmType.BACKTRACKING:
                 assignment = backtracking_search(csp)
             elif algorithm_type == AlgorithmType.MRV:
-                pass
+                assignment = backtracking_search(csp, select_unassigned_variable=minimum_remaining_value)
             elif algorithm_type == AlgorithmType.DEGREE_H:
                 assignment = backtracking_search(
                     csp, select_unassigned_variable=most_constrained_variable

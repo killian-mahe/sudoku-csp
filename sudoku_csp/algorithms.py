@@ -3,6 +3,7 @@
 
 """
 from sudoku_csp.csp import CSP
+from sudoku_csp.interfaces import Constraint
 
 
 def unorder_domain_values(var: any, assignment: dict, csp: CSP):
@@ -45,7 +46,7 @@ def minimum_remaining_value(assignment, csp: CSP):
     selected_var = None
     for var in csp.variables:
         if var not in assignment:
-            if min_value_count == 0 or len(csp.domains[var]) < min_value_count:
+            if not min_value_count or len(csp.domains[var]) < min_value_count:
                 selected_var = var
                 min_value_count = len(csp.domains[var])
     return selected_var

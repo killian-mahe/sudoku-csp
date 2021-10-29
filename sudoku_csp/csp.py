@@ -16,13 +16,13 @@ class CSP:
     A basic implementation of a CSP.
     """
 
-    def __init__(self, variables: list, domains: dict, constraints: list):
+    def __init__(self, variables: set, domains: dict, constraints: list):
         """
         Create a CSP instance.
 
         Parameters
         ----------
-        variables : list
+        variables : set
             The list of variables.
         domains : dict
             A dictionary containing the domain of each variable.
