@@ -23,3 +23,14 @@ def naive_selector(assignment, csp: CSP):
         if var not in assignment:
             return var
 
+
+def minimum_remaining_value(assignment, csp: CSP):
+    min_value_count = 0
+    selected_var = None
+    for var in csp.variables:
+        if var not in assignment:
+            if min_value_count == 0 or len(csp.domains[var]) < min_value_count:
+                selected_var = var
+                min_value_count = len(csp.domains[var])
+    return selected_var
+
