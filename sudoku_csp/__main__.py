@@ -11,7 +11,7 @@ import numpy as np
 from sudoku_csp.interfaces import AlgorithmType, Resolver
 from sudoku_csp.gui import MainWindow
 from sudoku_csp.csp import SudokuCSP
-from sudoku_csp.algorithms import backtracking_search
+from sudoku_csp.algorithms import backtracking_search, most_constrained_variable
 
 
 class SudokuResolver(Resolver):
@@ -52,7 +52,9 @@ class SudokuResolver(Resolver):
             elif algorithm_type == AlgorithmType.MRV:
                 pass
             elif algorithm_type == AlgorithmType.DEGREE_H:
-                pass
+                assignment = backtracking_search(
+                    csp, select_unassigned_variable=most_constrained_variable
+                )
             elif algorithm_type == AlgorithmType.LEAST_CONSTRAINING_H:
                 pass
             elif algorithm_type == AlgorithmType.AC3:
@@ -60,6 +62,10 @@ class SudokuResolver(Resolver):
 
             if assignment is not None:
                 sudoku_map = csp.get_resulted_map(assignment)
+            else:
+                self.error.emit(
+                    f"Can't find a solution using {algorithm_type.value} algorithm."
+                )
         except Exception:
             print(traceback.format_exc())
             self.error.emit(traceback.format_exc())

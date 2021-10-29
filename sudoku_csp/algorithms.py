@@ -40,6 +40,16 @@ def first_unassigned_variable(assignment: dict, csp: CSP):
             return var
 
 
+def most_constrained_variable(assignment: dict, csp: CSP):
+    unassigned_variables = csp.variables.symmetric_difference(set(assignment.keys()))
+
+    unassigned_var_to_const = {
+        k: csp.var_to_const[k] for k in unassigned_variables if k in csp.var_to_const
+    }
+
+    return sorted(unassigned_var_to_const, key=len)[0]
+
+
 def backtracking_search(
     csp: CSP,
     select_unassigned_variable=first_unassigned_variable,
