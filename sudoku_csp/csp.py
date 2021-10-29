@@ -3,6 +3,7 @@
 
 """
 import math
+import copy
 
 import numpy as np
 
@@ -54,7 +55,7 @@ class CSP:
             if var in self.variables:
                 self.var_to_const[var].add(constraint)
 
-    def consistent(self, assignment: dict):
+    def consistent(self, assignment: dict) -> bool:
         """
         Check if the passed assignment is consistent regarding the CSP.
 
@@ -73,7 +74,7 @@ class CSP:
             if all(v in assignment for v in con.scope)
         )
 
-    def consistent_with(self, assignment: dict, new_assignment: dict):
+    def consistent_with(self, assignment: dict, new_assignment: dict) -> bool:
         return self.consistent(assignment | new_assignment)
 
 
@@ -81,6 +82,8 @@ class SudokuCSP(CSP):
     def __init__(self, sudoku_map: np.ndarray):
         def constraint_evalution(values: any):
             return len(set(values)) == len(values)
+
+        self.sudoku_map = sudoku_map
 
         variables = set()
         domains = dict()
@@ -121,3 +124,21 @@ class SudokuCSP(CSP):
                         constraints.append(constraint)
 
         super().__init__(variables, domains, constraints)
+
+    def get_resulted_map(self, assignment: dict) -> np.ndarray:
+        """
+        Get the resulted map of the CSP.
+
+        Parameters
+        ----------
+        assignment : dict
+
+        Returns
+        -------
+        np.ndarray
+        """
+        result = copy.deepcopy(self.sudoku_map)
+        for x in range(0, len(self.sudoku_map)):
+            for y in range(0, len(self.sudoku_map)):
+                result[x, y] = assignment[f"{x}, {y}"]
+        return result

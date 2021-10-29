@@ -45,6 +45,7 @@ class SudokuResolver(Resolver):
             algorithm_type = AlgorithmType[algorithm_type.name]
 
             csp = SudokuCSP(sudoku_map)
+            assignment = None
 
             if algorithm_type is AlgorithmType.BACKTRACKING:
                 assignment = backtracking_search(csp)
@@ -56,6 +57,9 @@ class SudokuResolver(Resolver):
                 pass
             elif algorithm_type == AlgorithmType.AC3:
                 pass
+
+            if assignment is not None:
+                sudoku_map = csp.get_resulted_map(assignment)
         except Exception:
             print(traceback.format_exc())
             self.error.emit(traceback.format_exc())
