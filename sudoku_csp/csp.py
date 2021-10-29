@@ -79,7 +79,6 @@ class CSP:
 
 class SudokuCSP(CSP):
     def __init__(self, sudoku_map: np.ndarray):
-
         def constraint_evalution(values: any):
             return len(set(values)) == len(values)
 
@@ -92,21 +91,32 @@ class SudokuCSP(CSP):
         for x in range(len(sudoku_map)):
             for y in range(len(sudoku_map)):
                 variables.add(f"{x}, {y}")
-                domain = set(range(1, len(sudoku_map) + 1)) if not sudoku_map[x, y] else {sudoku_map[x, y]}
+                domain = (
+                    set(range(1, len(sudoku_map) + 1))
+                    if not sudoku_map[x, y]
+                    else {sudoku_map[x, y]}
+                )
                 domains[f"{x}, {y}"] = domain
 
                 for x_row in range(len(sudoku_map)):
-                    constraint = Constraint(frozenset({f"{x}, {y}", f"{x_row}, {y}"}), constraint_evalution)
+                    constraint = Constraint(
+                        frozenset({f"{x}, {y}", f"{x_row}, {y}"}), constraint_evalution
+                    )
                     if constraint not in constraints:
                         constraints.append(constraint)
 
                 for y_col in range(len(sudoku_map)):
-                    constraint = Constraint(frozenset({f"{x}, {y}", f"{x}, {y_col}"}), constraint_evalution)
+                    constraint = Constraint(
+                        frozenset({f"{x}, {y}", f"{x}, {y_col}"}), constraint_evalution
+                    )
                     if constraint not in constraints:
                         constraints.append(constraint)
 
                 for i in range(size):
-                    constraint = Constraint(frozenset({f"{x}, {y}", f"{x % size + i}, {y % size + i}"}), constraint_evalution)
+                    constraint = Constraint(
+                        frozenset({f"{x}, {y}", f"{x % size + i}, {y % size + i}"}),
+                        constraint_evalution,
+                    )
                     if constraint not in constraints:
                         constraints.append(constraint)
 

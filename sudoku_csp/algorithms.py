@@ -5,7 +5,46 @@
 from sudoku_csp.csp import CSP
 
 
-def backtracking_search(csp: CSP):
+def unorder_domain_values(var: any, assignment: dict, csp: CSP):
+    """
+    Get the domain values of a variable in a random order.
+
+    Parameters
+    ----------
+    var : any
+    assignment : dict
+    csp : CSP
+
+    Returns
+    -------
+    list[any]
+    """
+    return csp.domains[var]
+
+
+def first_unassigned_variable(assignment: dict, csp: CSP):
+    """
+    Get the first unselected variable.
+
+    Parameters
+    ----------
+    assignment : dict
+    csp : CSP
+
+    Returns
+    -------
+    any
+    """
+    for var in csp.variables:
+        if var not in assignment:
+            return var
+
+
+def backtracking_search(
+    csp: CSP,
+    select_unassigned_variable=first_unassigned_variable,
+    order_domain_values=unorder_domain_values,
+):
     """
     Implementation of the backtracking search algorithm.
 
@@ -13,15 +52,26 @@ def backtracking_search(csp: CSP):
     ----------
     csp : CSP
         The constraint satisfaction problem.
+    select_unassigned_variable : callable
+        How the variables are sorted.
+    order_domain_values : callable
+        How the domain ise sorted.
 
     Returns
     -------
     dict
     """
-    return recursive_backtracking({}, csp)
+    return recursive_backtracking(
+        {}, csp, select_unassigned_variable, order_domain_values
+    )
 
 
-def recursive_backtracking(assignment: dict, csp: CSP):
+def recursive_backtracking(
+    assignment: dict,
+    csp: CSP,
+    select_unassigned_variable=first_unassigned_variable,
+    order_domain_values=unorder_domain_values,
+):
     """
     Recursive backtracking function.
 
@@ -31,6 +81,10 @@ def recursive_backtracking(assignment: dict, csp: CSP):
         Assignments of variables.
     csp : CSP
         The constraint satisfaction problem.
+    select_unassigned_variable : callable
+        How the variables are sorted.
+    order_domain_values : callable
+        How the domain ise sorted.
 
     Returns
     -------
@@ -49,38 +103,3 @@ def recursive_backtracking(assignment: dict, csp: CSP):
                 return result
             assignment.pop(var)
     return None
-
-
-def order_domain_values(var: any, assignment: dict, csp: CSP):
-    """
-    Get the domain values of a variable.
-
-    Parameters
-    ----------
-    var : any
-    assignment : dict
-    csp : CSP
-
-    Returns
-    -------
-    list[any]
-    """
-    return csp.domains[var]
-
-
-def select_unassigned_variable(assignment: dict, csp: CSP):
-    """
-    Get a unselected variable.
-
-    Parameters
-    ----------
-    assignment : dict
-    csp : CSP
-
-    Returns
-    -------
-    any
-    """
-    for var in csp.variables:
-        if var not in assignment:
-            return var
