@@ -41,12 +41,24 @@ def first_unassigned_variable(assignment: dict, csp: CSP):
             return var
 
 
+def legal_values_count(csp: CSP, assignment, var):
+    related_constraints = csp.var_to_const[var]
+    var_domain = csp.domains[var].copy()
+    for constraint in related_constraints:
+        for v in constraint.scope:
+            if v in assignment:
+                for val in var_domain:
+                    if not constraint.satisfied({var: val, v: assignment[v]}):
+                        var_domain.remove(val)
+    return len(var_domain)
+
+
 def minimum_remaining_value(assignment, csp: CSP):
     min_value_count = 0
     selected_var = None
     for var in csp.variables:
         if var not in assignment:
-            if not min_value_count or len(csp.domains[var]) < min_value_count:
+            if not selected_var or legal_values_count(csp,assignment,var) < min_value_count:
                 selected_var = var
                 min_value_count = len(csp.domains[var])
     return selected_var
@@ -90,9 +102,9 @@ def most_constrained_variable(assignment: dict, csp: CSP):
 
 
 def backtracking_search(
-    csp: CSP,
-    select_unassigned_variable=first_unassigned_variable,
-    order_domain_values=unorder_domain_values,
+        csp: CSP,
+        select_unassigned_variable=first_unassigned_variable,
+        order_domain_values=unorder_domain_values,
 ):
     """
     Implementation of the backtracking search algorithm.
@@ -116,10 +128,10 @@ def backtracking_search(
 
 
 def recursive_backtracking(
-    assignment: dict,
-    csp: CSP,
-    select_unassigned_variable=first_unassigned_variable,
-    order_domain_values=unorder_domain_values,
+        assignment: dict,
+        csp: CSP,
+        select_unassigned_variable=first_unassigned_variable,
+        order_domain_values=unorder_domain_values,
 ):
     """
     Recursive backtracking function.
