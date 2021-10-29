@@ -3,6 +3,7 @@
 
 """
 import math
+import copy
 
 import numpy
 import numpy as np
@@ -55,7 +56,7 @@ class CSP:
             if var in self.variables:
                 self.var_to_const[var].add(constraint)
 
-    def consistent(self, assignment: dict):
+    def consistent(self, assignment: dict) -> bool:
         """
         Check if the passed assignment is consistent regarding the CSP.
 
@@ -74,6 +75,7 @@ class CSP:
             if all(v in assignment for v in con.scope)
         )
 
+
     def neighbour(self, var) -> list:
         neighbours=list()
         for constraint in self.var_to_const[var]:
@@ -81,13 +83,18 @@ class CSP:
                 if other != var:
                     neighbours.append(other)
         return neighbours
+     
+ 
+    def consistent_with(self, assignment: dict, new_assignment: dict) -> bool:
+        return self.consistent(assignment | new_assignment)
 
 
 class SudokuCSP(CSP):
     def __init__(self, sudoku_map: np.ndarray):
+        def constraint_evalution(values: any):
+            return len(set(values)) == len(values)
 
-        def constraint_evalution(a: int, b: int):
-            return a != b
+        self.sudoku_map = sudoku_map
 
         variables = set()
         domains = dict()
@@ -98,24 +105,53 @@ class SudokuCSP(CSP):
         for x in range(len(sudoku_map)):
             for y in range(len(sudoku_map)):
                 variables.add(f"{x}, {y}")
-                domain = set(range(1, len(sudoku_map))) if not sudoku_map[x, y] else {sudoku_map[x, y]}
+                domain = (
+                    set(range(1, len(sudoku_map) + 1))
+                    if not sudoku_map[x, y]
+                    else {sudoku_map[x, y]}
+                )
                 domains[f"{x}, {y}"] = domain
 
                 for x_row in range(len(sudoku_map)):
-                    constraint = Constraint(frozenset({f"{x}, {y}", f"{x_row}, {y}"}), constraint_evalution)
+                    constraint = Constraint(
+                        frozenset({f"{x}, {y}", f"{x_row}, {y}"}), constraint_evalution
+                    )
                     if constraint not in constraints:
                         constraints.append(constraint)
 
                 for y_col in range(len(sudoku_map)):
-                    constraint = Constraint(frozenset({f"{x}, {y}", f"{x}, {y_col}"}), constraint_evalution)
+                    constraint = Constraint(
+                        frozenset({f"{x}, {y}", f"{x}, {y_col}"}), constraint_evalution
+                    )
                     if constraint not in constraints:
                         constraints.append(constraint)
 
                 for i in range(size):
-                    constraint = Constraint(frozenset({f"{x}, {y}", f"{x % size + i}, {y % size + i}"}),
-                                            constraint_evalution)
+
+                    constraint = Constraint(
+                        frozenset({f"{x}, {y}", f"{x % size + i}, {y % size + i}"}),
+                        constraint_evalution,
+                    )
+                    
                     if constraint not in constraints:
                         constraints.append(constraint)
 
         super().__init__(variables, domains, constraints)
 
+    def get_resulted_map(self, assignment: dict) -> np.ndarray:
+        """
+        Get the resulted map of the CSP.
+
+        Parameters
+        ----------
+        assignment : dict
+
+        Returns
+        -------
+        np.ndarray
+        """
+        result = copy.deepcopy(self.sudoku_map)
+        for x in range(0, len(self.sudoku_map)):
+            for y in range(0, len(self.sudoku_map)):
+                result[x, y] = assignment[f"{x}, {y}"]
+        return result

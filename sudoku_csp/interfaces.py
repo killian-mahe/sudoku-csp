@@ -123,7 +123,7 @@ class Constraint:
         -------
         bool
         """
-        return self.val_func(*tuple(assignment[v] for v in self.scope))
+        return self.val_func(tuple(assignment[v] for v in self.scope))
 
 
     def __hash__(self):
@@ -131,6 +131,8 @@ class Constraint:
 
     def __eq__(self, other):
         if not isinstance(other, Constraint):
-            raise RuntimeError("You can only compare a constraint with another constraint.")
+            raise RuntimeError(
+                "You can only compare a constraint with another constraint."
+            )
 
         return self.scope == other.scope and self.val_func == other.val_func
