@@ -5,6 +5,7 @@
 import math
 import copy
 
+import numpy
 import numpy as np
 
 from interfaces import Constraint
@@ -74,6 +75,16 @@ class CSP:
             if all(v in assignment for v in con.scope)
         )
 
+
+    def neighbour(self, var) -> list:
+        neighbours=list()
+        for constraint in self.var_to_const[var]:
+            for other in constraint.scope:
+                if other != var:
+                    neighbours.append(other)
+        return neighbours
+     
+ 
     def consistent_with(self, assignment: dict, new_assignment: dict) -> bool:
         return self.consistent(assignment | new_assignment)
 
@@ -116,10 +127,12 @@ class SudokuCSP(CSP):
                         constraints.append(constraint)
 
                 for i in range(size):
+
                     constraint = Constraint(
                         frozenset({f"{x}, {y}", f"{x % size + i}, {y % size + i}"}),
                         constraint_evalution,
                     )
+                    
                     if constraint not in constraints:
                         constraints.append(constraint)
 
