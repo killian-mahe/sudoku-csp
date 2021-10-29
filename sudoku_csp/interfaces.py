@@ -125,6 +125,7 @@ class Constraint:
         """
         return self.val_func(*tuple(assignment[v] for v in self.scope))
 
+
     def __hash__(self):
         return hash((self.scope, self.val_func))
 

@@ -3,6 +3,7 @@
 
 """
 from sudoku_csp.csp import CSP
+from sudoku_csp.interfaces import Constraint
 
 
 def recursive_backtracking(csp: CSP, assignment: dict, var_selector):
@@ -34,3 +35,29 @@ def minimum_remaining_value(assignment, csp: CSP):
                 min_value_count = len(csp.domains[var])
     return selected_var
 
+
+def AC3(csp: CSP) -> CSP:
+    def remove_inconsistent_values(v, associated_constraint: Constraint) -> bool:
+        removed = False
+        for value in csp.domains[v]:
+            for other_var in associated_constraint.scope:
+                if other_var != v:
+                    violated = True
+                    for other_value in csp.domains[other_var]:
+                        if associated_constraint.satisfied({v: value, other_var: other_value}):
+                            violated = False
+                            break
+                    if violated:
+                        csp.domains[v].remove(value)
+                        removed = True
+        return removed
+
+    arcs = csp.var_to_const.copy()
+    while len(arcs) > 0:
+        (var, associated_constraints) = arcs.popitem()
+        for constraint in associated_constraints:
+            if remove_inconsistent_values(var, constraint):
+                for affected in csp.neighbour(var):
+                    arcs[affected] = csp.var_to_const[affected]
+
+    return csp

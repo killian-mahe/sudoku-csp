@@ -74,6 +74,14 @@ class CSP:
             if all(v in assignment for v in con.scope)
         )
 
+    def neighbour(self, var) -> list:
+        neighbours=list()
+        for constraint in self.var_to_const[var]:
+            for other in constraint.scope:
+                if other != var:
+                    neighbours.append(other)
+        return neighbours
+
 
 class SudokuCSP(CSP):
     def __init__(self, sudoku_map: np.ndarray):
@@ -110,3 +118,4 @@ class SudokuCSP(CSP):
                         constraints.append(constraint)
 
         super().__init__(variables, domains, constraints)
+
