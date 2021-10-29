@@ -58,9 +58,10 @@ def minimum_remaining_value(assignment, csp: CSP):
     selected_var = None
     for var in csp.variables:
         if var not in assignment:
-            if not selected_var or legal_values_count(csp,assignment,var) < min_value_count:
+            current_count = legal_values_count(csp, assignment, var)
+            if not selected_var or current_count < min_value_count:
                 selected_var = var
-                min_value_count = len(csp.domains[var])
+                min_value_count = current_count
     return selected_var
 
 
