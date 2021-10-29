@@ -19,7 +19,8 @@ from PySide6.QtWidgets import (
     QGraphicsItem,
     QStyleOptionGraphicsItem,
     QWidget,
-    QMenu, QMessageBox,
+    QMenu,
+    QMessageBox,
 )
 import numpy as np
 
@@ -234,7 +235,9 @@ class MainWindow(QMainWindow):
                     self.draw_number(self.digits_map[x, y], np.array([x, y]))
 
     def handle_error(self, error_message: str):
-        QMessageBox.critical(self, "Error", "An error as occured while solving the puzzle.")
+        QMessageBox.critical(
+            self, "Error", "An error as occured while solving the puzzle."
+        )
 
     def handle_import(self):
         pass
