@@ -16,13 +16,13 @@ class CSP:
     A basic implementation of a CSP.
     """
 
-    def __init__(self, variables: set, domains: dict, constraints: list):
+    def __init__(self, variables: list, domains: dict, constraints: list):
         """
         Create a CSP instance.
 
         Parameters
         ----------
-        variables : set
+        variables : list
             The list of variables.
         domains : dict
             A dictionary containing the domain of each variable.
@@ -75,16 +75,14 @@ class CSP:
             if all(v in assignment for v in con.scope)
         )
 
-
     def neighbour(self, var) -> list:
-        neighbours=list()
+        neighbours = list()
         for constraint in self.var_to_const[var]:
             for other in constraint.scope:
                 if other != var:
                     neighbours.append(other)
         return neighbours
-     
- 
+
     def consistent_with(self, assignment: dict, new_assignment: dict) -> bool:
         return self.consistent(assignment | new_assignment)
 
@@ -96,7 +94,7 @@ class SudokuCSP(CSP):
 
         self.sudoku_map = sudoku_map
 
-        variables = set()
+        variables = list()
         domains = dict()
         constraints = list()
 
@@ -104,7 +102,7 @@ class SudokuCSP(CSP):
 
         for x in range(len(sudoku_map)):
             for y in range(len(sudoku_map)):
-                variables.add(f"{x}, {y}")
+                variables.append(f"{x}, {y}")
                 domain = (
                     set(range(1, len(sudoku_map) + 1))
                     if not sudoku_map[x, y]
@@ -127,14 +125,15 @@ class SudokuCSP(CSP):
                         constraints.append(constraint)
 
                 for i in range(size):
+                    for j in range(size):
 
-                    constraint = Constraint(
-                        frozenset({f"{x}, {y}", f"{x % size + i}, {y % size + i}"}),
-                        constraint_evalution,
-                    )
-                    
-                    if constraint not in constraints:
-                        constraints.append(constraint)
+                        constraint = Constraint(
+                            frozenset({f"{x}, {y}", f"{size * int((x / size)) + i}, {size * int((y / size)) + j}"}),
+                            constraint_evalution,
+                        )
+
+                        if constraint not in constraints:
+                            constraints.append(constraint)
 
         super().__init__(variables, domains, constraints)
 

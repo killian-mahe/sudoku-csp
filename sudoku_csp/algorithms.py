@@ -44,12 +44,11 @@ def first_unassigned_variable(assignment: dict, csp: CSP):
 def legal_values_count(csp: CSP, assignment, var):
     related_constraints = csp.var_to_const[var]
     var_domain = csp.domains[var].copy()
-    for constraint in related_constraints:
-        for v in constraint.scope:
-            if v in assignment:
-                for val in var_domain:
-                    if not constraint.satisfied({var: val, v: assignment[v]}):
-                        var_domain.remove(val)
+    for val in csp.domains[var]:
+        for constraint in related_constraints:
+            if all(v in assignment for v in constraint.scope):
+                if not constraint.satisfied(assignment | {var: val}):
+                    var_domain.remove(val)
     return len(var_domain)
 
 
@@ -58,9 +57,10 @@ def minimum_remaining_value(assignment, csp: CSP):
     selected_var = None
     for var in csp.variables:
         if var not in assignment:
-            if not selected_var or legal_values_count(csp,assignment,var) < min_value_count:
+            legal_values = legal_values_count(csp, assignment, var)
+            if not selected_var or legal_values < min_value_count:
                 selected_var = var
-                min_value_count = len(csp.domains[var])
+                min_value_count = legal_values
     return selected_var
 
 
@@ -72,7 +72,9 @@ def AC3(csp: CSP) -> CSP:
                 if other_var != v:
                     violated = True
                     for other_value in csp.domains[other_var]:
-                        if associated_constraint.satisfied({v: value, other_var: other_value}):
+                        if associated_constraint.satisfied(
+                            {v: value, other_var: other_value}
+                        ):
                             violated = False
                             break
                     if violated:
@@ -92,7 +94,9 @@ def AC3(csp: CSP) -> CSP:
 
 
 def most_constrained_variable(assignment: dict, csp: CSP):
-    unassigned_variables = csp.variables.symmetric_difference(set(assignment.keys()))
+    unassigned_variables = set(csp.variables).symmetric_difference(
+        set(assignment.keys())
+    )
 
     unassigned_var_to_const = {
         k: csp.var_to_const[k] for k in unassigned_variables if k in csp.var_to_const
@@ -102,9 +106,9 @@ def most_constrained_variable(assignment: dict, csp: CSP):
 
 
 def backtracking_search(
-        csp: CSP,
-        select_unassigned_variable=first_unassigned_variable,
-        order_domain_values=unorder_domain_values,
+    csp: CSP,
+    select_unassigned_variable=first_unassigned_variable,
+    order_domain_values=unorder_domain_values,
 ):
     """
     Implementation of the backtracking search algorithm.
@@ -128,10 +132,10 @@ def backtracking_search(
 
 
 def recursive_backtracking(
-        assignment: dict,
-        csp: CSP,
-        select_unassigned_variable=first_unassigned_variable,
-        order_domain_values=unorder_domain_values,
+    assignment: dict,
+    csp: CSP,
+    select_unassigned_variable=first_unassigned_variable,
+    order_domain_values=unorder_domain_values,
 ):
     """
     Recursive backtracking function.
@@ -159,7 +163,12 @@ def recursive_backtracking(
     for value in order_domain_values(var, assignment, csp):
         if csp.consistent_with(assignment, {var: value}):
             assignment[var] = value
-            result = recursive_backtracking(assignment, csp)
+            result = recursive_backtracking(
+                assignment,
+                csp,
+                select_unassigned_variable=select_unassigned_variable,
+                order_domain_values=order_domain_values,
+            )
             if result is not None:
                 return result
             assignment.pop(var)

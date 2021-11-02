@@ -125,9 +125,14 @@ class Constraint:
         """
         return self.val_func(tuple(assignment[v] for v in self.scope))
 
-
     def __hash__(self):
         return hash((self.scope, self.val_func))
+
+    def __str__(self):
+        scope_str = ""
+        for v in self.scope:
+            scope_str += f"{v}; "
+        return scope_str
 
     def __eq__(self, other):
         if not isinstance(other, Constraint):
