@@ -15,6 +15,7 @@ from sudoku_csp.algorithms import (
     backtracking_search,
     most_constrained_variable,
     minimum_remaining_value,
+    AC3
 )
 
 
@@ -64,7 +65,10 @@ class SudokuResolver(Resolver):
             elif algorithm_type == AlgorithmType.LEAST_CONSTRAINING_H:
                 pass
             elif algorithm_type == AlgorithmType.AC3:
-                pass
+                csp = AC3(csp)
+                assignment = backtracking_search(
+                    csp, select_unassigned_variable=minimum_remaining_value
+                )
 
             if assignment is not None:
                 sudoku_map = csp.get_resulted_map(assignment)

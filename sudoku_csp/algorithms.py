@@ -67,7 +67,7 @@ def minimum_remaining_value(assignment, csp: CSP):
 def AC3(csp: CSP) -> CSP:
     def remove_inconsistent_values(v, associated_constraint: Constraint) -> bool:
         removed = False
-        for value in csp.domains[v]:
+        for value in csp.domains[v].copy():
             for other_var in associated_constraint.scope:
                 if other_var != v:
                     violated = True
