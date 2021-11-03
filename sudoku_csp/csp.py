@@ -14,6 +14,7 @@ from interfaces import Constraint
 class CSP:
     """
     A basic implementation of a CSP.
+
     """
 
     def __init__(self, variables: list, domains: dict, constraints: list):
@@ -28,6 +29,7 @@ class CSP:
             A dictionary containing the domain of each variable.
         constraints : list
             A list of constraint.
+
         """
         self.domains = domains
         self.variables = variables
@@ -51,6 +53,7 @@ class CSP:
         Returns
         -------
         None
+
         """
         for var in constraint.scope:
             if var in self.variables:
@@ -68,6 +71,7 @@ class CSP:
         Returns
         -------
         bool
+
         """
         return all(
             con.satisfied(assignment)
@@ -112,14 +116,16 @@ class SudokuCSP(CSP):
 
                 for x_row in range(len(sudoku_map)):
                     constraint = Constraint(
-                        frozenset({f"{x}, {y}", f"{x_row}, {y}"}), constraint_evalution
+                        frozenset({f"{x}, {y}", f"{x_row}, {y}"}
+                                  ), constraint_evalution
                     )
                     if constraint not in constraints:
                         constraints.append(constraint)
 
                 for y_col in range(len(sudoku_map)):
                     constraint = Constraint(
-                        frozenset({f"{x}, {y}", f"{x}, {y_col}"}), constraint_evalution
+                        frozenset({f"{x}, {y}", f"{x}, {y_col}"}
+                                  ), constraint_evalution
                     )
                     if constraint not in constraints:
                         constraints.append(constraint)
@@ -128,7 +134,8 @@ class SudokuCSP(CSP):
                     for j in range(size):
 
                         constraint = Constraint(
-                            frozenset({f"{x}, {y}", f"{size * int((x / size)) + i}, {size * int((y / size)) + j}"}),
+                            frozenset(
+                                {f"{x}, {y}", f"{size * int((x / size)) + i}, {size * int((y / size)) + j}"}),
                             constraint_evalution,
                         )
 
@@ -148,6 +155,7 @@ class SudokuCSP(CSP):
         Returns
         -------
         np.ndarray
+
         """
         result = copy.deepcopy(self.sudoku_map)
         for x in range(0, len(self.sudoku_map)):
