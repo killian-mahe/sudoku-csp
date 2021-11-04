@@ -15,7 +15,7 @@ from sudoku_csp.algorithms import (
     backtracking_search,
     most_constrained_variable,
     minimum_remaining_value,
-    AC3
+    AC3,
 )
 
 

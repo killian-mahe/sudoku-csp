@@ -66,6 +66,7 @@ class MainWindow(QMainWindow):
 
         self.generate_menu = QMenu("Generate", self)
         self.solve_menu = QMenu("Solve", self)
+        self.size_actions = list()
 
         self.size = 3
         self.length = self.size ** 2
@@ -153,21 +154,25 @@ class MainWindow(QMainWindow):
             lambda x: self.handle_generation(SudokuDifficulty.HARD)
         )
 
-        generate_random_action = QAction("Random", self)
-        generate_random_action.setShortcut("Ctrl+R")
-        generate_random_action.setCheckable(False)
-        generate_random_action.triggered.connect(
-            lambda x: self.handle_generation(SudokuDifficulty.RANDOM)
-        )
+        size_menu = QMenu("Size", self)
+        for i in np.arange(2, 7):
+            action = QAction(f"{i}x{i}", self)
+            action.setCheckable(True)
+            action.setData(i)
+            if i == self.size:
+                action.setChecked(True)
+            action.triggered.connect(self.handle_size_edit)
+            self.size_actions.append(action)
+            size_menu.addAction(action)
 
         self.generate_menu.addActions(
             [
                 generate_easy_action,
                 generate_medium_action,
                 generate_hard_action,
-                generate_random_action,
             ]
         )
+        self.generate_menu.addMenu(size_menu)
         self.menuBar().addMenu(self.generate_menu)
 
         solve_backtracking_action = QAction("Backtracking", self)
@@ -209,11 +214,18 @@ class MainWindow(QMainWindow):
 
         self.setStatusBar(QStatusBar())
 
+    def set_size(self, size: int):
+        self.size = size
+        self.length = self.size ** 2
+        self.cell_width = 500 / self.length
+        self.box_map: np.array = np.empty((self.length, self.length, 2), dtype=object)
+        self.digits_map: np.array = np.zeros((self.length, self.length))
+
     def draw_number(self, number: int, pos: np.array, size: int = 30):
         text = DigitText()
         self.box_map[pos[0], pos[1], 1] = text
 
-        text.setFont(QFont("Arial", size, QFont.Bold))
+        text.setFont(QFont("Arial", self.cell_width / 2, QFont.Bold))
         text.setText(str(number))
 
         pos = pos * self.cell_width + self.cell_width / 2
@@ -226,6 +238,9 @@ class MainWindow(QMainWindow):
         self.box_map[pos[0], pos[1], 1] = None
 
     def update_sudoku_view(self):
+        self.sudoku_scene.clear()
+        self.create_sudoku_view(self.size)
+
         for y in range(self.length):
             for x in range(self.length):
 
@@ -256,3 +271,12 @@ class MainWindow(QMainWindow):
         print(f"Sudoku resolved using {algorithm_type.value} algorithm!")
         self.digits_map = sudoku_map
         self.update_sudoku_view()
+
+    def handle_size_edit(self):
+        if isinstance(self.sender(), QAction):
+            for action in self.size_actions:
+                if action != self.sender():
+                    action.setChecked(False)
+
+            self.set_size(int(self.sender().data()))
+            self.update_sudoku_view()
