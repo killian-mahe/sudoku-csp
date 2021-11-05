@@ -126,6 +126,43 @@ def most_constrained_variable(assignment: dict, csp: CSP):
     return sorted(unassigned_var_to_const, key=len)[0]
 
 
+def least_constraining_value(var: any, assignment: dict, csp: CSP):
+    """
+    Sort the values of the given variable domain using LCV method.
+
+    Parameters
+    ----------
+    var : any
+    assignment : dict
+    csp : CSP
+
+    Returns
+    -------
+    List[any]
+    """
+    def conflicts_count(value):
+        """
+        Count the number of conflicts with the neighbours of this variable.
+
+        Parameters
+        ----------
+        value : any
+            Value of the variable
+
+        Returns
+        -------
+        int
+        """
+        values_count = 0
+        for constraint in csp.var_to_const[var]:
+            for var2 in constraint.scope:
+                if var is not var2 and var2 in assignment and not constraint.satisfied(assignment | {var: value}):
+                    values_count += 1
+        return values_count
+
+    return sorted(csp.domains[var], key=conflicts_count)
+
+
 def backtracking_search(
     csp: CSP,
     select_unassigned_variable=first_unassigned_variable,

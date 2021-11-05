@@ -15,7 +15,8 @@ from sudoku_csp.algorithms import (
     backtracking_search,
     most_constrained_variable,
     minimum_remaining_value,
-    AC3,
+    least_constraining_value,
+    AC3
 )
 
 
@@ -63,7 +64,9 @@ class SudokuResolver(Resolver):
                     csp, select_unassigned_variable=most_constrained_variable
                 )
             elif algorithm_type == AlgorithmType.LEAST_CONSTRAINING_H:
-                pass
+                assignment = backtracking_search(
+                    csp, order_domain_values=least_constraining_value
+                )
             elif algorithm_type == AlgorithmType.AC3:
                 csp = AC3(csp)
                 assignment = backtracking_search(
