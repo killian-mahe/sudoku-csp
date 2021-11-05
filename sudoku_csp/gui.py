@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
     QWidget,
     QMenu,
     QMessageBox,
+    QLabel,
 )
 import numpy as np
 
@@ -65,7 +66,12 @@ class MainWindow(QMainWindow):
         self.sudoku_view = QGraphicsView(self.sudoku_scene)
 
         self.generate_menu = QMenu("Generate", self)
+        self.self_generate_menu = QMenu("Self generated puzzle", self)
+        self.online_generate_menu = QMenu("Online generation (3x3 only)", self)
         self.solve_menu = QMenu("Solve", self)
+        self.info_message = QLabel("", self)
+        self.info_message.setStyleSheet("QLabel { color: red; font-weight: bold; }")
+        self.layout.addWidget(self.info_message, 1, 0)
         self.size_actions = list()
 
         self.size = 3
@@ -77,7 +83,9 @@ class MainWindow(QMainWindow):
         self.resolver_thread = QThread()
         self.resolve.connect(resolver.do_work)
         resolver.result_ready.connect(self.handle_result)
-        resolver.error.connect(self.handle_error)
+        resolver.error.connect(
+            lambda x: self.handle_error("An error as occured while solving the puzzle.")
+        )
         resolver.moveToThread(self.resolver_thread)
 
         self.setCentralWidget(QtWidgets.QWidget())
@@ -89,7 +97,7 @@ class MainWindow(QMainWindow):
         self.resolver_thread.start()
 
     def create_sudoku_view(self, n: int = 3):
-        self.layout.addWidget(self.sudoku_view)
+        self.layout.addWidget(self.sudoku_view, 0, 0)
 
         for y in range(0, n ** 2):
             for x in range(0, n ** 2):
@@ -133,26 +141,45 @@ class MainWindow(QMainWindow):
         import_action.setEnabled(False)
         self.menuBar().addAction(import_action)
 
-        generate_easy_action = QAction("Easy", self)
-        generate_easy_action.setShortcut("Ctrl+E")
-        generate_easy_action.setCheckable(False)
-        generate_easy_action.triggered.connect(
-            lambda x: self.handle_generation(SudokuDifficulty.EASY)
-        )
+        for menu, is_online in zip(
+            [self.self_generate_menu, self.online_generate_menu], [False, True]
+        ):
 
-        generate_medium_action = QAction("Medium", self)
-        generate_medium_action.setShortcut("Ctrl+M")
-        generate_medium_action.setCheckable(False)
-        generate_medium_action.triggered.connect(
-            lambda x: self.handle_generation(SudokuDifficulty.MEDIUM)
-        )
+            generate_easy_action = QAction("Easy", self)
+            generate_easy_action.setData(
+                {"is_online": is_online, "difficulty": SudokuDifficulty.EASY}
+            )
+            generate_easy_action.setShortcut("Ctrl+E")
+            generate_easy_action.setCheckable(False)
+            generate_easy_action.triggered.connect(self.handle_generation)
 
-        generate_hard_action = QAction("Hard", self)
-        generate_hard_action.setShortcut("Ctrl+H")
-        generate_hard_action.setCheckable(False)
-        generate_hard_action.triggered.connect(
-            lambda x: self.handle_generation(SudokuDifficulty.HARD)
-        )
+            generate_medium_action = QAction("Medium", self)
+            generate_medium_action.setData(
+                {"is_online": is_online, "difficulty": SudokuDifficulty.MEDIUM}
+            )
+            generate_medium_action.setShortcut("Ctrl+M")
+            generate_medium_action.setCheckable(False)
+            generate_medium_action.triggered.connect(self.handle_generation)
+
+            generate_hard_action = QAction("Hard", self)
+            generate_hard_action.setData(
+                {"is_online": is_online, "difficulty": SudokuDifficulty.HARD}
+            )
+            generate_hard_action.setShortcut("Ctrl+H")
+            generate_hard_action.setCheckable(False)
+            generate_hard_action.triggered.connect(self.handle_generation)
+
+            menu.addActions(
+                [
+                    generate_easy_action,
+                    generate_medium_action,
+                    generate_hard_action,
+                ]
+            )
+
+            self.generate_menu.addMenu(menu)
+
+        self.menuBar().addMenu(self.generate_menu)
 
         size_menu = QMenu("Size", self)
         for i in np.arange(2, 7):
@@ -165,15 +192,7 @@ class MainWindow(QMainWindow):
             self.size_actions.append(action)
             size_menu.addAction(action)
 
-        self.generate_menu.addActions(
-            [
-                generate_easy_action,
-                generate_medium_action,
-                generate_hard_action,
-            ]
-        )
         self.generate_menu.addMenu(size_menu)
-        self.menuBar().addMenu(self.generate_menu)
 
         solve_backtracking_action = QAction("Backtracking", self)
         solve_backtracking_action.triggered.connect(
@@ -250,15 +269,31 @@ class MainWindow(QMainWindow):
                     self.draw_number(self.digits_map[x, y], np.array([x, y]))
 
     def handle_error(self, error_message: str):
-        QMessageBox.critical(
-            self, "Error", "An error as occured while solving the puzzle."
-        )
+        QMessageBox.critical(self, "Error", error_message)
 
     def handle_import(self):
         pass
 
-    def handle_generation(self, difficulty: SudokuDifficulty = SudokuDifficulty.EASY):
-        self.digits_map = Generator.generate(self.size, difficulty)
+    def handle_generation(self):
+        action = self.sender()
+        if action.data()["is_online"]:
+            if self.size != 3:
+                self.handle_error(
+                    "Online generation of sudoku with size different than 3x3 is not currently supported."
+                )
+                return
+            self.info_message.clear()
+            self.digits_map = Generator.generate_online(
+                self.size, action.data()["difficulty"]
+            )
+        else:
+            self.info_message.setText(
+                "The uniqueness of this homemade generated puzzle isn't guaranteed."
+            )
+            self.digits_map = Generator.generate_backtracking(
+                self.size, action.data()["difficulty"]
+            )
+
         self.update_sudoku_view()
         self.solve_menu.setEnabled(True)
 
@@ -278,5 +313,9 @@ class MainWindow(QMainWindow):
                 if action != self.sender():
                     action.setChecked(False)
 
+            if self.sender().data() != 3:
+                self.online_generate_menu.setEnabled(False)
+            else:
+                self.online_generate_menu.setEnabled(True)
             self.set_size(int(self.sender().data()))
             self.update_sudoku_view()
