@@ -6,7 +6,7 @@ This module manage the graphical user interface of the application.
 """
 
 from PySide6 import QtWidgets
-from PySide6.QtCore import QRectF, QPointF, Signal, QThread
+from PySide6.QtCore import QRectF, QPointF, Signal, QThread, Qt
 from PySide6.QtGui import QIcon, QAction, QFont, QPainter, QPen
 from PySide6.QtWidgets import (
     QMainWindow,
@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
     QMenu,
     QMessageBox,
     QLabel,
+    QLineEdit,
 )
 import numpy as np
 
@@ -64,6 +65,7 @@ class MainWindow(QMainWindow):
         self.layout = QGridLayout()
         self.sudoku_scene = QGraphicsScene()
         self.sudoku_view = QGraphicsView(self.sudoku_scene)
+        self.layout.addWidget(self.sudoku_view, 0, 0)
 
         self.generate_menu = QMenu("Generate", self)
         self.self_generate_menu = QMenu("Self generated puzzle", self)
@@ -77,8 +79,8 @@ class MainWindow(QMainWindow):
         self.size = 3
         self.length = self.size ** 2
         self.cell_width = 500 / self.length
-        self.box_map: np.array = np.empty((self.length, self.length, 2), dtype=object)
-        self.digits_map: np.array = np.zeros((self.length, self.length))
+        self.box_map = [[None for y in range(self.length)] for x in range(self.length)]
+        self.digits_map = np.zeros((self.length, self.length), dtype=int)
 
         self.resolver_thread = QThread()
         self.resolve.connect(resolver.do_work)
@@ -97,21 +99,27 @@ class MainWindow(QMainWindow):
         self.resolver_thread.start()
 
     def create_sudoku_view(self, n: int = 3):
-        self.layout.addWidget(self.sudoku_view, 0, 0)
 
         for y in range(0, n ** 2):
             for x in range(0, n ** 2):
-                self.box_map[x, y] = [
-                    self.sudoku_scene.addRect(
-                        QRectF(
-                            self.cell_width * x,
-                            self.cell_width * y,
-                            self.cell_width,
-                            self.cell_width,
-                        )
-                    ),
-                    None,
-                ]
+                self.sudoku_scene.addRect(
+                    QRectF(
+                        self.cell_width * x,
+                        self.cell_width * y,
+                        self.cell_width,
+                        self.cell_width,
+                    )
+                ),
+
+                editor = QLineEdit()
+                editor.setAlignment(Qt.AlignCenter)
+                proxy = self.sudoku_scene.addWidget(editor)
+                proxy.setPos(QPointF(self.cell_width * x + 1, self.cell_width * y + 1))
+                proxy.setFont(QFont("Arial", self.cell_width / 2, QFont.Bold))
+                proxy.setMinimumHeight(self.cell_width - 1)
+                proxy.setMaximumWidth(self.cell_width - 1)
+
+                self.box_map[x][y] = proxy
 
         # Draw visual lines
         pen = QPen()
@@ -228,36 +236,19 @@ class MainWindow(QMainWindow):
                 solve_least_constraining_h_action,
             ]
         )
-        self.solve_menu.setEnabled(False)
         self.menuBar().addMenu(self.solve_menu)
 
         self.setStatusBar(QStatusBar())
 
-    def set_size(self, size: int):
-        self.size = size
-        self.length = self.size ** 2
-        self.cell_width = 500 / self.length
-        self.box_map: np.array = np.empty((self.length, self.length, 2), dtype=object)
-        self.digits_map: np.array = np.zeros((self.length, self.length))
-
-    def draw_number(self, number: int, pos: np.array, size: int = 30):
-        text = DigitText()
-        self.box_map[pos[0], pos[1], 1] = text
-
-        text.setFont(QFont("Arial", self.cell_width / 2, QFont.Bold))
-        text.setText(str(number))
-
-        pos = pos * self.cell_width + self.cell_width / 2
-        text.setPos(QPointF(pos[0], pos[1]))
-        self.sudoku_scene.addItem(text)
-        return text
+    def draw_number(self, number: int, pos: np.array):
+        self.box_map[pos[0]][pos[1]].widget().setText(str(number))
 
     def clear_cell(self, pos: np.array):
-        self.sudoku_scene.removeItem(self.box_map[pos[0], pos[1], 1])
-        self.box_map[pos[0], pos[1], 1] = None
+        self.box_map[pos[0]][pos[1]].widget().clear()
 
     def update_sudoku_view(self):
         self.sudoku_scene.clear()
+
         self.create_sudoku_view(self.size)
 
         for y in range(self.length):
@@ -295,11 +286,16 @@ class MainWindow(QMainWindow):
             )
 
         self.update_sudoku_view()
-        self.solve_menu.setEnabled(True)
 
     def handle_resolve(self, algorithm_type: AlgorithmType):
         print(f"Trying to resolve using {algorithm_type.value} algorithm...")
-        self.solve_menu.setEnabled(False)
+        for x in range(self.length):
+            for y in range(self.length):
+                if self.box_map[x][y].widget().text():
+                    self.digits_map[x, y] = int(self.box_map[x][y].widget().text())
+                else:
+                    self.digits_map[x, y] = 0
+
         self.resolve.emit(algorithm_type, self.digits_map)
 
     def handle_result(self, algorithm_type: AlgorithmType, sudoku_map: np.array):
@@ -317,5 +313,16 @@ class MainWindow(QMainWindow):
                 self.online_generate_menu.setEnabled(False)
             else:
                 self.online_generate_menu.setEnabled(True)
-            self.set_size(int(self.sender().data()))
+
+            self.size = int(self.sender().data())
+            self.length = self.size ** 2
+            self.cell_width = 500 / self.length
+
+            self.sudoku_scene.clear()
+
+            self.box_map = [
+                [None for y in range(self.length)] for x in range(self.length)
+            ]
+            self.digits_map = np.zeros((self.length, self.length), dtype=int)
+
             self.update_sudoku_view()
