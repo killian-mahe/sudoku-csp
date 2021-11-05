@@ -15,7 +15,7 @@ from sudoku_csp.algorithms import (
     backtracking_search,
     most_constrained_variable,
     minimum_remaining_value,
-    AC3
+    AC3,
 )
 
 
@@ -87,7 +87,7 @@ if __name__ == "__main__":
 
     sudoku_solver = SudokuResolver()
     main_window = MainWindow("Sudoku solver", sudoku_solver)
-    main_window.resize(1000, 600)
+    main_window.resize(1000, 700)
     main_window.show()
 
     sys.exit(app.exec())

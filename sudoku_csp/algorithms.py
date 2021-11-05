@@ -2,6 +2,8 @@
 """Solver algorithms.
 
 """
+import numpy as np
+
 from sudoku_csp.csp import CSP
 from sudoku_csp.interfaces import Constraint
 
@@ -21,6 +23,25 @@ def unorder_domain_values(var: any, assignment: dict, csp: CSP):
     list[any]
     """
     return csp.domains[var]
+
+
+def random_domain_values(var: any, assignment: dict, csp: CSP):
+    """
+    Get the domain values of a variable in a random order.
+
+    Parameters
+    ----------
+    var : any
+    assignment : dict
+    csp : CSP
+
+    Returns
+    -------
+    List[any]
+    """
+    domain = list(csp.domains[var])
+    np.random.shuffle(domain)
+    return domain
 
 
 def first_unassigned_variable(assignment: dict, csp: CSP):
