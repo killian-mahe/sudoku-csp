@@ -185,7 +185,7 @@ def backtracking_search(
     dict
     """
     return recursive_backtracking(
-        {}, csp, select_unassigned_variable, order_domain_values
+        csp.apply_constraints(), csp, select_unassigned_variable, order_domain_values
     )
 
 
