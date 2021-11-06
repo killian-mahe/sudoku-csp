@@ -87,6 +87,13 @@ class CSP:
                     neighbours.append(other)
         return neighbours
 
+    def apply_constraints(self) -> dict:
+        assignment = dict()
+        for var in self.variables:
+            if len(self.domains[var]) == 1:
+                assignment[var] = list(self.domains[var])[0]
+        return assignment
+
     def consistent_with(self, assignment: dict, new_assignment: dict) -> bool:
         return self.consistent(assignment | new_assignment)
 
@@ -118,30 +125,33 @@ class SudokuCSP(CSP):
                     constraint = Constraint(
                         frozenset({f"{x}, {y}", f"{x_row}, {y}"}), constraint_evalution
                     )
-                    if constraint not in constraints:
+                    if x_row != x and constraint not in constraints:
                         constraints.append(constraint)
 
                 for y_col in range(len(sudoku_map)):
                     constraint = Constraint(
                         frozenset({f"{x}, {y}", f"{x}, {y_col}"}), constraint_evalution
                     )
-                    if constraint not in constraints:
+                    if y_col != y and constraint not in constraints:
                         constraints.append(constraint)
 
                 for i in range(size):
                     for j in range(size):
 
+                        x_box = size * int((x / size)) + i
+                        y_box = size * int((y / size)) + j
+
                         constraint = Constraint(
                             frozenset(
                                 {
                                     f"{x}, {y}",
-                                    f"{size * int((x / size)) + i}, {size * int((y / size)) + j}",
+                                    f"{x_box}, {y_box}",
                                 }
                             ),
                             constraint_evalution,
                         )
 
-                        if constraint not in constraints:
+                        if x_box != x and y_box != y and constraint not in constraints:
                             constraints.append(constraint)
 
         super().__init__(variables, domains, constraints)

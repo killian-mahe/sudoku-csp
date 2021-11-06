@@ -70,7 +70,7 @@ class SudokuResolver(Resolver):
             elif algorithm_type == AlgorithmType.AC3:
                 csp = AC3(csp)
                 assignment = backtracking_search(
-                    csp, select_unassigned_variable=minimum_remaining_value
+                    csp
                 )
 
             if assignment is not None:
